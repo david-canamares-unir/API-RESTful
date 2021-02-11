@@ -2,10 +2,11 @@ import os
 import json
 import boto3
 
-import decimalencoder
+from todos import decimalencoder
 
 dynamodb = boto3.resource('dynamodb')
 comprehend_client = boto3.client('comprehend')
+aws_translate_client = boto3.client('translate')
 
 
 def translate(event, context):
@@ -17,19 +18,18 @@ def translate(event, context):
             'id': event['pathParameters']['id']
         }
     )
-    print("IDIOMA")
-    print(event['pathParameters']['language'])
-    print("texto todo")
-    print(result['Item']['text'])
-    
+
     text_todo = result['Item']['text']
-    # create a response
+    response_comprehend_client = comprehend_client.detect_dominant_language(Text=text_todo)
+
+    response_translate_text = aws_translate_client.translate_text(
+        Text = result['Item']['text'],
+        TerminologyNames=[],
+        SourceLanguageCode = response_comprehend_client['Languages'][0]["LanguageCode"],
+        TargetLanguageCode = event['pathParameters']['language']
+    )
     
-    print(text_todo)
-    
-    get_language = comprehend_client.detect_dominant_language(Text=text_todo)
-    
-    result['Item']['text'] = get_language
+    result['Item']['text'] = response_translate_text['TranslatedText']
     
     response = {
         "statusCode": 200,
