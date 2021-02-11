@@ -19,8 +19,10 @@ def translate(event, context):
             'id': event['pathParameters']['id']
         }
     )
-    
-
+    print("PARAMETROS")
+    print(event['pathParameters'])
+    print(result)
+    print(result['Item'])
     # create a response
     
     get_language = comprehend_client.detect_dominant_language(Text=result['Item']['text'])
